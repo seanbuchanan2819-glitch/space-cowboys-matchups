@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Cowboys Matchup Tracker</title>
+<style>
+:root {
+  --navy: #002D62;
+  --navy-hover: #003d87;
+  --orange: #EB6E1F;
+  --orange-hover: #d4621a;
+  --gold: #F7C244;
+  --light: #f0f2f5;
+  --white: #ffffff;
+  --border: #dce1e9;
+  --text: #1a2332;
+  --text-muted: #6b7c93;
+  --green: #1b5e20;
+  --green-bg: #e8f5e9;
+  --red: #b71c1c;
+  --red-bg: #ffebee;
+  --yellow: #6d4c00;
+  --yellow-bg: #fff8e1;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--light);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* âââ HEADER âââ */
+header {
+  background: var(--navy);
+  color: white;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+}
+.header-logo { font-size: 36px; line-height: 1; }
+.header-title h1 { font-size: 20px; font-weight: 800; letter-spacing: 0.3px; }
+.header-title p { font-size: 12px; opacity: 0.65; margin-top: 2px; }
+.header-badge {
+  margin-left: auto;
+  background: var(--orange);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* âââ CONTROLS âââ */
+.controls {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.control-group label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+select {
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--white);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+select:focus { border-color: var(--orange); }
+select#opponent-select { min-width: 230px; }
+select#min-pa { width: 75px; }
+
+.btn {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 22px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--orange); color: white; }
+.btn-primary:hover { background: var(--orange-hover); }
+.btn-primary:disabled { background: #c8cfd8; cursor: not-allowed; transform: none; }
+
+.controls-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.sport-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--light);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+/* âââ MAIN âââ */
+main { padding: 22px 28px; max-width: 1500px; margin: 0 auto; }
+
+/* âââ PROGRESS âââ */
+#progress-wrap {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  text-align: center;
+  margin-bottom: 20px;
+  display: none;
+}
+#progress-title { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+#progress-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+.progress-bar-outer {
+  background: #e4e8ef;
+  border-radius: 20px;
+  height: 8px;
+  overflow: hidden;
+  max-width: 400px;
+  margin: 0 auto 10px;
+}
+.progress-bar-inner {
+  background: linear-gradient(90deg, var(--orange), var(--gold));
+  height: 100%;
+  width: 0%;
+  border-radius: 20px;
+  transition: width 0.4s ease;
+}
+#progress-text { font-size: 12px; color: var(--text-muted); }
+
+/* âââ ERROR âââ */
+#error-wrap {
+  background: #fff3f3;
+  border: 1px solid #ffcdd2;
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  color: var(--red);
+  display: none;
+  font-size: 13px;
+}
+
+/* âââ TABS âââ */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  width: fit-content;
+  margin-bottom: 18px;
+}
+.tab {
+  padding: 9px 22px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  transition: all 0.15s;
+  letter-spacing: 0.2px;
+}
+.tab.active { background: var(--navy); color: white; }
+.tab:not(.active):hover { background: var(--light); color: var(--navy); }
+
+/* âââ SECTION âââ */
+.section { display: none; }
+.section.active { display: block; }
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.section-header h2 { font-size: 16px; font-weight: 700; color: var(--navy); }
+.section-header .count {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--white);
+  border: 1px solid var(--border);
+  padding: 2px 9px;
+  border-radius: 12px;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.legend-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.legend-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+}
+.legend-dot.good { background: #4caf50; }
+.legend-dot.neutral { background: #ffc107; }
+.legend-dot.bad { background: #ef5350; }
+
+/* âââ TABLE âââ */
+.table-wrap {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: auto;
+  max-height: 680px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 620px;
+}
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+th {
+  background: var(--navy);
+  color: white;
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+th:hover { background: var(--navy-hover); }
+th.center { text-align: center; }
+th.sorted-asc::after { content: ' â²'; font-size: 9px; opacity: 0.8; }
+th.sorted-desc::after { content: ' â¼'; font-size: 9px; opacity: 0.8; }
+
+tbody tr { border-bottom: 1px solid #f0f3f7; transition: background 0.1s; }
+tbody tr:hover { background: #eef3fa !important; }
+tbody tr:nth-child(even) { background: #fafbfc; }
+
+td {
+  padding: 9px 16px;
+  vertical-align: middle;
+  border-right: 1px solid #f0f3f7;
+}
+td:last-child, th:last-child { border-right: none; }
+td.center { text-align: center; }
+
+.player-cell { display: flex; align-items: center; gap: 7px; }
+.player-name { font-weight: 600; color: var(--text); }
+.pos-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  color: white;
+  white-space: nowrap;
+}
+.pos-P  { background: #1a5276; }
+.pos-SP { background: #1a5276; }
+.pos-RP { background: #154360; }
+.pos-C  { background: #784212; }
+.pos-1B, .pos-2B, .pos-3B, .pos-SS { background: #4a235a; }
+.pos-OF, .pos-LF, .pos-CF, .pos-RF { background: #1e5631; }
+.pos-DH { background: #5d4037; }
+
+.pa-cell { text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600; }
+
+.stat-cell {
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  border-radius: 0;
+}
+.stat-good  { background: var(--green-bg) !important; color: var(--green); }
+.stat-ok    { background: var(--yellow-bg) !important; color: var(--yellow); }
+.stat-bad   { background: var(--red-bg) !important; color: var(--red); }
+
+/* Placeholder */
+.placeholder {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.placeholder .ph-icon { font-size: 52px; margin-bottom: 14px; }
+.placeholder .ph-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.placeholder .ph-sub { font-size: 13px; line-height: 1.6; }
+
+/* âââ EMPTY STATE âââ */
+.no-data-row td {
+  text-align: center;
+  padding: 18px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* âââ RESPONSIVE âââ */
+@media (max-width: 700px) {
+  header { padding: 12px 16px; }
+  .controls { padding: 12px 16px; }
+  main { padding: 16px; }
+  .header-badge { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">ð</div>
+  <div class="header-title">
+    <h1>Space Cowboys Matchup Tracker</h1>
+    <p>Historical batterâpitcher data across all professional levels</p>
+  </div>
+  <div class="header-badge">MLB Stats API</div>
+</header>
+
+<div class="controls">
+  <div class="control-group">
+    <label>Opponent</label>
+    <select id="opponent-select" disabled>
+      <option value="">Loading teamsâ¦</option>
+    </select>
+  </div>
+  <div class="control-group">
+    <label>Min PA</label>
+    <select id="min-pa">
+      <option value="1">1+</option>
+      <option value="3">3+</option>
+      <option value="5" selected>5+</option>
+      <option value="10">10+</option>
+      <option value="20">20+</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" id="load-btn" disabled>Load Matchups</button>
+  <div class="controls-right">
+    <span class="sport-note">ð All professional levels (MLB + MiLB)</span>
+  </div>
+</div>
+
+<main>
+
+  <div id="progress-wrap">
+    <div id="progress-title">Loading Matchup Dataâ¦</div>
+    <div id="progress-sub">Fetching rosters and historical at-bat data</div>
+    <div class="progress-bar-outer">
+      <div class="progress-bar-inner" id="progress-bar"></div>
+    </div>
+    <div id="progress-text">Preparingâ¦</div>
+  </div>
+
+  <div id="error-wrap"></div>
+
+  <div id="content">
+    <div class="tabs">
+      <button class="tab active" data-tab="hitters">âï¸ SL Hitters vs Opp Pitchers</button>
+      <button class="tab" data-tab="pitchers">ð¡ï¸ SL Pitchers vs Opp Hitters</button>
+    </div>
+
+    <!-- Hitters Section -->
+    <div class="section active" id="section-hitters">
+      <div class="placeholder">
+        <div class="ph-icon">â¾</div>
+        <div class="ph-title">Select an opponent to load matchup data</div>
+        <div class="ph-sub">Choose a team from the dropdown above and click <strong>Load Matchups</strong>.<br>Data covers all at-bats across every professional level in the MLB Stats system.</div>
+      </div>
+    </div>
+
+    <!-- Pitchers Section -->
+    <div class="section" id="section-pitchers">
+      <div class="placeholder">
+        <div class="ph-icon">â¾</div>
+        <div class="ph-title">Select an opponent to load matchup data</div>
+        <div class="ph-sub">Choose a team from the dropdown above and click <strong>Load Matchups</strong>.</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// âââ CONSTANTS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const API = 'https://statsapi.mlb.com/api/v1';
+const SL_TEAM_ID = 5434;
+const SPORT_IDS = '1,11,12,13,14,16'; // MLB + AAA + AA + High-A + A + Rookie
+
+// All professional AAA teams (hardcoded from API for instant load)
+const AAA_TEAMS = [
+  {id:342,  name:'Albuquerque Isotopes',  abbr:'ABQ'},
+  {id:422,  name:'Buffalo Bisons',        abbr:'BUF'},
+  {id:494,  name:'Charlotte Knights',     abbr:'CLT'},
+  {id:445,  name:'Columbus Clippers',     abbr:'COL'},
+  {id:234,  name:'Durham Bulls',          abbr:'DUR'},
+  {id:4904, name:'El Paso Chihuahuas',    abbr:'ELP'},
+  {id:431,  name:'Gwinnett Stripers',     abbr:'GWN'},
+  {id:484,  name:'Indianapolis Indians',  abbr:'IND'},
+  {id:451,  name:'Iowa Cubs',             abbr:'IOW'},
+  {id:564,  name:'Jacksonville Jumbo Shrimp', abbr:'JAX'},
+  {id:400,  name:'Las Vegas Aviators',    abbr:'LV'},
+  {id:1410, name:'Lehigh Valley IronPigs',abbr:'LHV'},
+  {id:416,  name:'Louisville Bats',       abbr:'LOU'},
+  {id:235,  name:'Memphis Redbirds',      abbr:'MEM'},
+  {id:556,  name:'Nashville Sounds',      abbr:'NAS'},
+  {id:568,  name:'Norfolk Tides',         abbr:'NOR'},
+  {id:238,  name:'Oklahoma City Comets',  abbr:'OKC'},
+  {id:541,  name:'Omaha Storm Chasers',   abbr:'OMA'},
+  {id:2310, name:'Reno Aces',             abbr:'RNO'},
+  {id:534,  name:'Rochester Red Wings',   abbr:'ROC'},
+  {id:560,  name:'Round Rock Express',    abbr:'RR'},
+  {id:547,  name:'Sacramento River Cats', abbr:'SAC'},
+  {id:572,  name:'Salt Lake Bees',        abbr:'SLC'},
+  {id:427,  name:'Scranton/WB RailRiders',abbr:'SWB'},
+  {id:551,  name:'St. Paul Saints',       abbr:'STP'},
+  {id:553,  name:'Tacoma Rainiers',       abbr:'TAC'},
+  {id:252,  name:'Toledo Mud Hens',       abbr:'TOL'},
+  {id:463,  name:'Worcester Red Sox',     abbr:'WOR'},
+];âââââââââââââââââââââââââââââ
+document.addEventListener('DOMContentLoaded', () => {
+  populateOpponents();
+  document.getElementById('load-btn').addEventListener('click', loadMatchups);
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', switchTab));
+  document.getElementById('min-pa').addEventListener('change', rerender);
+  document.getElementById('opponent-select').addEventListener('change', () => {
+    document.getElementById('load-btn').disabled = !document.getElementById('opponent-select').value;
+  });
+});
+
+function populateOpponents() {
+  const sel = document.getElementById('opponent-select');
+  sel.innerHTML = '<option value="">â Select opponent â</option>';
+  AAA_TEAMS.filter(t => t.id !== SL_TEAM_ID).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.name;
+    sel.appendChild(opt);
+  });
+  sel.disabled = false;
+}
+
+function switchTab(e) {
+  const tab = e.currentTarget.dataset.tab;
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === `section-${tab}`));
+}
+
+// âââ ASYNC HELPERS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
+  return res.json();
+}
+
+async function batchedMap(items, fn, concurrency = 8, onProgress) {
+  const results = new Array(items.length);
+  let idx = 0;
+  let done = 0;
+  async function worker() {
+    while (idx < items.length) {
+      const i = idx++;
+      results[i] = await fn(items[i], i);
+      done++;
+      if (onProgress) onProgress(done, items.length);
+    }
+  }
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  return results;
+}
+
+// âââ ROSTER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+async function getRoster(teamId) {
+  const data = await fetchJSON(`${API}/teams/${teamId}/roster/Active?season=2026`);
+  return (data.roster || []).map(p => ({
+    id: p.person.id,
+    name: p.person.fullName,
+    pos: p.position.abbreviation,
+    isPitcher: ['P', 'SP', 'RP'].includes(p.position.abbreviation)
+  }));
+}
+
+// âââ MATCHUP FETCH âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+async function getMatchup(batterId, pitcherId) {
+  try {
+    const url = `${API}/people/${batterId}/stats?stats=vsPlayer&opposingPlayerId=${pitcherId}&group=hitting&gameType=R&sportIds=${SPORT_IDS}`;
+    const data = await fetchJSON(url);
+    const split = data.stats?.[0]?.splits?.[0]?.stat;
+    if (!split || !split.plateAppearances || split.plateAppearances === 0) return null;
+    return split;
+  } catch {
+    return null;
+  }
+}
+
+// âââ MAIN LOAD âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+async function loadMatchups() {
+  const oppId = parseInt(document.getElementById('opponent-select').value);
+  if (!oppId) return;
+
+  const oppName = AAA_TEAMS.find(t => t.id === oppId)?.name || 'Opponent';
+  setProgress(true, `Loading rostersâ¦`, 0);
+  document.getElementById('error-wrap').style.display = 'none';
+  document.getElementById('load-btn').disabled = true;
+
+  try {
+    // Step 1: Fetch both rosters
+    const [slRoster, oppRoster] = await Promise.all([getRoster(SL_TEAM_ID), getRoster(oppId)]);
+    const slHitters  = slRoster.filter(p => !p.isPitcher);
+    const slPitchers = slRoster.filter(p =>  p.isPitcher);
+    const oppHitters  = oppRoster.filter(p => !p.isPitcher);
+    const oppPitchers = oppRoster.filter(p =>  p.isPitcher);
+
+    // Step 2: Build all matchup pairs
+    const hitterPairs  = slHitters.flatMap(h  => oppPitchers.map(p => ({ batter: h,  pitcher: p })));
+    const pitcherPairs = slPitchers.flatMap(p => oppHitters.map(h  => ({ batter: h,  pitcher: p })));
+
+    const total = hitterPairs.length + pitcherPairs.length;
+    let fetched = 0;
+
+    const progress = (done, t) => {
+      fetched++;
+      const pct = Math.round((fetched / total) * 100);
+      setProgress(true, `Fetching matchup dataâ¦`, pct, `${fetched} / ${total} matchups checked`);
+    };
+
+    // Step 3: Fetch all matchup data concurrently
+    setProgress(true, `Fetching ${total} matchup combinationsâ¦`, 0);
+
+    const [hitterResults, pitcherResults] = await Promise.all([
+      batchedMap(hitterPairs, async (pair, i) => {
+        const stat = await getMatchup(pair.batter.id, pair.pitcher.id);
+        fetched++;
+        setProgress(true, `Fetching matchup dataâ¦`, Math.round((fetched/total)*100), `${fetched} / ${total} pairs checked`);
+        return stat ? { batter: pair.batter, pitcher: pair.pitcher, stat } : null;
+      }, 8),
+      batchedMap(pitcherPairs, async (pair, i) => {
+        const stat = await getMatchup(pair.batter.id, pair.pitcher.id);
+        fetched++;
+        setProgress(true, `Fetching matchup dataâ¦`, Math.round((fetched/total)*100), `${fetched} / ${total} pairs checked`);
+        return stat ? { batter: pair.batter, pitcher: pair.pitcher, stat } : null;
+      }, 8)
+    ]);
+
+    currentData.hitters  = hitterResults.filter(Boolean);
+    currentData.pitchers = pitcherResults.filter(Boolean);
+
+    setProgress(false);
+    document.getElementById('load-btn').disabled = false;
+    rerender(oppName);
+
+  } catch (err) {
+    setProgress(false);
+    showError(`Failed to load data: ${err.message}`);
+    document.getElementById('load-btn').disabled = false;
+  }
+}
+
+// âââ RENDER ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function rerender(oppNameOrEvent) {
+  const oppName = typeof oppNameOrEvent === 'string' ? oppNameOrEvent :
+    AAA_TEAMS.find(t => t.id === parseInt(document.getElementById('opponent-select').value))?.name || 'Opponent';
+  const minPA = parseInt(document.getElementById('min-pa').value) || 1;
+
+  const filteredHitters  = currentData.hitters.filter(r  => r.stat.plateAppearances >= minPA);
+  const filteredPitchers = currentData.pitchers.filter(r => r.stat.plateAppearances >= minPA);
+
+  renderSection('hitters', filteredHitters, oppName);
+  renderSection('pitchers', filteredPitchers, oppName);
+}
+
+function renderSection(type, rows, oppName) {
+  const section = document.getElementById(`section-${type}`);
+  const isHitters = type === 'hitters';
+
+  if (rows.length === 0) {
+    section.innerHTML = `
+      <div class="placeholder">
+        <div class="ph-icon">${currentData[type].length === 0 ? 'ð' : 'ð'}</div>
+        <div class="ph-title">${currentData[type].length === 0 ? 'No matchup data loaded yet' : 'No matchups meet the minimum PA filter'}</div>
+        <div class="ph-sub">${currentData[type].length > 0 ? `Try lowering the minimum PA threshold â ${currentData[type].length} raw matchups were found.` : 'These players may not have faced each other in any tracked games.'}</div>
+      </div>`;
+    return;
+  }
+
+  // Sort
+  const { col, dir } = sortState[type];
+  const sorted = [...rows].sort((a, b) => {
+    let va, vb;
+    switch (col) {
+      case 'batter':   va = a.batter.name;  vb = b.batter.name;  break;
+      case 'pitcher':  va = a.pitcher.name; vb = b.pitcher.name; break;
+      case 'pa':       va = a.stat.plateAppearances; vb = b.stat.plateAppearances; break;
+      case 'ab':       va = a.stat.atBats || 0; vb = b.stat.atBats || 0; break;
+      case 'k':        va = kPct(a.stat); vb = kPct(b.stat); break;
+      case 'bb':       va = bbPct(a.stat); vb = bbPct(b.stat); break;
+      case 'slg':      va = parseFloat(a.stat.slg) || 0; vb = parseFloat(b.stat.slg) || 0; break;
+      default:         va = a.batter.name;  vb = b.batter.name;
+    }
+    if (typeof va === 'string') return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    return dir === 'asc' ? va - vb : vb - va;
+  });
+
+  const batterLabel  = isHitters ? 'SL Hitter'        : 'SL Pitcher';
+  const pitcherLabel = isHitters ? `Opp Pitcher (${oppName})` : `Opp Hitter (${oppName})`;
+
+  const legendNote = isHitters
+    ? '<span class="legend-label">For Hitter:</span>'
+    : '<span class="legend-label">For SL pitcher:</span>';
+
+  const kNote  = isHitters ? 'K% low' : 'K% high';
+  const bbNote = isHitters ? 'BB% high' : 'BB% low';
+
+  section.innerHTML = `
+    <div class="section-header">
+      <h2>${isHitters ? 'âï¸ Space Cowboys Hitters vs ' + oppName + ' Pitchers'
+                       : 'ð¡ï¸ Space Cowboys Pitchers vs ' + oppName + ' Hitters'}</h2>
+      <span class="count">${rows.length} matchup${rows.length !== 1 ? 's' : ''}</span>
+    </div>
+    <div class="legend">
+      ${legendNote}
+      <div class="legend-item"><div class="legend-dot good"></div> Favors SL ${isHitters ? 'hitter' : 'pitcher'}</div>
+      <div class="legend-item"><div class="legend-dot neutral"></div> Neutral</div>
+      <div class="legend-item"><div class="legend-dot bad"></div> Unfavorable for SL ${isHitters ? 'hitter' : 'pitcher'}</div>
+    </div>
+    <div class="table-wrap">
+      <table id="table-${type}">
+        <thead>
+          <tr>
+            <th data-col="batter"  data-type="${type}" class="${colClass('batter', type)}">${batterLabel}</th>
+            <th data-col="pitcher" data-type="${type}" class="${colClass('pitcher', type)}">${pitcherLabel}</th>
+            <th data-col="pa"      data-type="${type}" class="center ${colClass('pa', type)}">PA</th>
+            <th data-col="ab"      data-type="${type}" class="center ${colClass('ab', type)}">AB</th>
+            <th data-col="k"       data-type="${type}" class="center ${colClass('k', type)}">K%</th>
+            <th data-col="bb"      data-type="${type}" class="center ${colClass('bb', type)}">BB%</th>
+            <th data-col="slg"     data-type="${type}" class="center ${colClass('slg', type)}">SLG</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(r => rowHTML(r, isHitters)).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  // Attach sort listeners
+  section.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      const t   = th.dataset.type;
+      if (sortState[t].col === col) {
+        sortState[t].dir = sortState[t].dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState[t].col = col;
+        sortState[t].dir = col === 'pa' || col === 'k' || col === 'bb' || col === 'slg' ? 'desc' : 'asc';
+      }
+      rerender();
+    });
+  });
+}
+
+function rowHTML(r, isHitters) {
+  const pa  = r.stat.plateAppearances || 0;
+  const kp  = kPct(r.stat);
+  const bbp = bbPct(r.stat);
+  const slg = parseFloat(r.stat.slg) || 0;
+
+  const kClass   = isHitters ? colorClass(kp,  [0.15, 0.22], true)  : colorClass(kp,  [0.15, 0.22], false);
+  const bbClass  = isHitters ? colorClass(bbp, [0.07, 0.11], false) : colorClass(bbp, [0.07, 0.11], true);
+  const slgClass = isHitters ? colorClass(slg, [0.350, 0.450], false): colorClass(slg, [0.350, 0.450], true);
+
+  return `
+    <tr>
+      <td><div class="player-cell">
+        <span class="player-name">${r.batter.name}</span>
+        <span class="pos-badge pos-${r.batter.pos.replace(/[^A-Z]/g,'')}">${r.batter.pos}</span>
+      </div></td>
+      <td><div class="player-cell">
+        <span class="player-name">${r.pitcher.name}</span>
+        <span class="pos-badge pos-${r.pitcher.pos.replace(/[^A-Z]/g,'')}">${r.pitcher.pos}</span>
+      </div></td>
+      <td class="pa-cell">${pa}</td>
+      <td class="pa-cell">${r.stat.atBats || 0}</td>
+      <td class="stat-cell ${kClass}">${fmtPct(kp)}</td>
+      <td class="stat-cell ${bbClass}">${fmtPct(bbp)}</td>
+      <td class="stat-cell ${slgClass}">${fmtSlg(slg)}</td>
+    </tr>`;
+}
+
+function kPct(s) {
+  return s.plateAppearances > 0 ? (s.strikeOuts / s.plateAppearances) : 0;
+}
+function bbPct(s) {
+  return s.plateAppearances > 0 ? (s.baseOnBalls / s.plateAppearances) : 0;
+}
+function fmtPct(v) { return (v * 100).toFixed(1) + '%'; }
+function fmtSlg(v) { return v.toFixed(3).replace(/^0/, ''); }
+
+function colorClass(val, [lo, hi], lowerIsBetter) {
+  if (val < lo) return lowerIsBetter ? 'stat-good' : 'stat-bad';
+  if (val > hi) return lowerIsBetter ? 'stat-bad' : 'stat-good';
+  return 'stat-ok';
+}
+
+function colClass(col, type) {
+  if (sortState[type].col === col) {
+    return sortState[type].dir === 'asc' ? 'sorted-asc' : 'sorted-desc';
+  }
+  return '';
+}
+
+function setProgress(visible, title = '', pct = 0, sub = '') {
+  const wrap = document.getElementById('progress-wrap');
+  wrap.style.display = visible ? 'block' : 'none';
+  if (visible) {
+    document.getElementById('progress-title').textContent = title;
+    document.getElementById('progress-sub').textContent = sub || 'Fetching roster and at-bat data from MLB Stats APIâ¦';
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = pct + '% complete';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-wrap');
+  el.style.display = 'block';
+  el.textContent = 'â¦ ' + msg;
+}
+</script>
+</body>
+</html>âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function setProgress(visible, title = '', pct = 0, sub = '') {
+  const wrap = document.getElementById('progress-wrap');
+  wrap.style.display = visible ? 'block' : 'none';
+  if (visible) {
+    document.getElementById('progress-title').textContent = title;
+    document.getElementById('progress-sub').textContent = sub || 'Fetching roster and at-bat data from MLB Stats APIâ¦';
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = pct + '% complete';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-wrap');
+  el.style.display = 'block';
+  el.textContent = 'â ï¸ ' + msg;
+}
+</script>
+</body>
+</html>
