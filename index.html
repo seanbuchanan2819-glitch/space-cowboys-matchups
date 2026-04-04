@@ -743,7 +743,7 @@ async function loadMatchups() {
     await batchedMap(allGamePks, async (gamePk) => {
       try {
         const data = await fetchJSON(`https://statsapi.mlb.com/api/v1.1/game/${gamePk}/feed/live`);
-        const atBats = parseGamePlays(data.liveData ? data : { plays: { allPlays: [] } }, rosterIds);
+        const atBats = parseGamePlays(data.liveData ? data.liveData : { plays: { allPlays: [] } }, rosterIds);
         allAtBats.push(...atBats);
       } catch {}
       gamesProcessed++;
