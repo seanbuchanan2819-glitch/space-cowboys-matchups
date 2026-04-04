@@ -375,7 +375,7 @@ td.center { text-align: center; }
   </div>
   <button class="btn btn-primary" id="load-btn" disabled>Load Matchups</button>
   <div class="controls-right">
-    <span class="sport-note">📊 All professional levels (MLB + MiLB)</span>
+    <span class="sport-note">📊 AAA + AA game data (2024-2026)</span>
   </div>
 </div>
 
@@ -423,39 +423,51 @@ td.center { text-align: center; }
 // ─── CONSTANTS ─────────────────────────────────────────────────────────────
 const API = 'https://statsapi.mlb.com/api/v1';
 const SL_TEAM_ID = 5434;
-const SPORT_IDS = '1,11,12,13,14,16'; // MLB + AAA + AA + High-A + A + Rookie
+const SL_PARENT_ORG = 117; // Houston Astros
+const SEASONS = [2024, 2025, 2026];
 
-// All professional AAA teams (hardcoded from API for instant load)
 const AAA_TEAMS = [
-  {id:342,  name:'Albuquerque Isotopes',  abbr:'ABQ'},
-  {id:422,  name:'Buffalo Bisons',        abbr:'BUF'},
-  {id:494,  name:'Charlotte Knights',     abbr:'CLT'},
-  {id:445,  name:'Columbus Clippers',     abbr:'COL'},
-  {id:234,  name:'Durham Bulls',          abbr:'DUR'},
-  {id:4904, name:'El Paso Chihuahuas',    abbr:'ELP'},
-  {id:431,  name:'Gwinnett Stripers',     abbr:'GWN'},
-  {id:484,  name:'Indianapolis Indians',  abbr:'IND'},
-  {id:451,  name:'Iowa Cubs',             abbr:'IOW'},
-  {id:564,  name:'Jacksonville Jumbo Shrimp', abbr:'JAX'},
-  {id:400,  name:'Las Vegas Aviators',    abbr:'LV'},
-  {id:1410, name:'Lehigh Valley IronPigs',abbr:'LHV'},
-  {id:416,  name:'Louisville Bats',       abbr:'LOU'},
-  {id:235,  name:'Memphis Redbirds',      abbr:'MEM'},
-  {id:556,  name:'Nashville Sounds',      abbr:'NAS'},
-  {id:568,  name:'Norfolk Tides',         abbr:'NOR'},
-  {id:238,  name:'Oklahoma City Comets',  abbr:'OKC'},
-  {id:541,  name:'Omaha Storm Chasers',   abbr:'OMA'},
-  {id:2310, name:'Reno Aces',             abbr:'RNO'},
-  {id:534,  name:'Rochester Red Wings',   abbr:'ROC'},
-  {id:560,  name:'Round Rock Express',    abbr:'RR'},
-  {id:547,  name:'Sacramento River Cats', abbr:'SAC'},
-  {id:572,  name:'Salt Lake Bees',        abbr:'SLC'},
-  {id:427,  name:'Scranton/WB RailRiders',abbr:'SWB'},
-  {id:551,  name:'St. Paul Saints',       abbr:'STP'},
-  {id:553,  name:'Tacoma Rainiers',       abbr:'TAC'},
-  {id:252,  name:'Toledo Mud Hens',       abbr:'TOL'},
-  {id:463,  name:'Worcester Red Sox',     abbr:'WOR'},
+  {id:342,  name:'Albuquerque Isotopes'},
+  {id:422,  name:'Buffalo Bisons'},
+  {id:494,  name:'Charlotte Knights'},
+  {id:445,  name:'Columbus Clippers'},
+  {id:234,  name:'Durham Bulls'},
+  {id:4904, name:'El Paso Chihuahuas'},
+  {id:431,  name:'Gwinnett Stripers'},
+  {id:484,  name:'Indianapolis Indians'},
+  {id:451,  name:'Iowa Cubs'},
+  {id:564,  name:'Jacksonville Jumbo Shrimp'},
+  {id:400,  name:'Las Vegas Aviators'},
+  {id:1410, name:'Lehigh Valley IronPigs'},
+  {id:416,  name:'Louisville Bats'},
+  {id:235,  name:'Memphis Redbirds'},
+  {id:556,  name:'Nashville Sounds'},
+  {id:568,  name:'Norfolk Tides'},
+  {id:238,  name:'Oklahoma City Comets'},
+  {id:541,  name:'Omaha Storm Chasers'},
+  {id:2310, name:'Reno Aces'},
+  {id:534,  name:'Rochester Red Wings'},
+  {id:560,  name:'Round Rock Express'},
+  {id:547,  name:'Sacramento River Cats'},
+  {id:572,  name:'Salt Lake Bees'},
+  {id:427,  name:'Scranton/WB RailRiders'},
+  {id:551,  name:'St. Paul Saints'},
+  {id:553,  name:'Tacoma Rainiers'},
+  {id:252,  name:'Toledo Mud Hens'},
+  {id:463,  name:'Worcester Red Sox'},
 ];
+
+// At-bat event classification for stat computation
+const WALK_EVENTS = new Set(['walk', 'intent_walk']);
+const HBP_EVENTS  = new Set(['hit_by_pitch']);
+const SAC_EVENTS  = new Set(['sac_fly', 'sac_fly_double_play', 'sac_bunt', 'sac_bunt_double_play']);
+const INTERF_EVENTS = new Set(['catcher_interf']);
+const K_EVENTS    = new Set(['strikeout', 'strikeout_double_play']);
+const HIT_EVENTS  = new Set(['single', 'double', 'triple', 'home_run']);
+const TB_MAP      = { single: 1, double: 2, triple: 3, home_run: 4 };
+
+// Events that do NOT count as an official at-bat
+const NOT_AB = new Set([...WALK_EVENTS, ...HBP_EVENTS, ...SAC_EVENTS, ...INTERF_EVENTS]);
 
 // ─── STATE ──────────────────────────────────────────────────────────────────
 let sortState = { hitters: { col: null, dir: 'asc' }, pitchers: { col: null, dir: 'asc' } };
@@ -499,16 +511,14 @@ async function fetchJSON(url) {
   return res.json();
 }
 
-async function batchedMap(items, fn, concurrency = 8, onProgress) {
+async function batchedMap(items, fn, concurrency = 6) {
   const results = new Array(items.length);
   let idx = 0;
-  let done = 0;
   async function worker() {
     while (idx < items.length) {
       const i = idx++;
-      results[i] = await fn(items[i], i);
-      done++;
-      if (onProgress) onProgress(done, items.length);
+      try { results[i] = await fn(items[i], i); }
+      catch { results[i] = null; }
     }
   }
   await Promise.all(Array.from({ length: concurrency }, worker));
@@ -517,26 +527,164 @@ async function batchedMap(items, fn, concurrency = 8, onProgress) {
 
 // ─── ROSTER ─────────────────────────────────────────────────────────────────
 async function getRoster(teamId) {
-  const data = await fetchJSON(`${API}/teams/${teamId}/roster/Active?season=2026`);
-  return (data.roster || []).map(p => ({
-    id: p.person.id,
-    name: p.person.fullName,
-    pos: p.position.abbreviation,
-    isPitcher: ['P', 'SP', 'RP'].includes(p.position.abbreviation)
-  }));
+  // Try current year first, fall back
+  for (const season of [2026, 2025]) {
+    try {
+      const data = await fetchJSON(`${API}/teams/${teamId}/roster/Active?season=${season}`);
+      if (data.roster && data.roster.length > 0) {
+        return data.roster.map(p => ({
+          id: p.person.id,
+          name: p.person.fullName,
+          pos: p.position.abbreviation,
+          isPitcher: ['P', 'SP', 'RP'].includes(p.position.abbreviation)
+        }));
+      }
+    } catch {}
+  }
+  return [];
 }
 
-// ─── MATCHUP FETCH ───────────────────────────────────────────────────────────
-async function getMatchup(batterId, pitcherId) {
+// ─── FIND AA AFFILIATES ─────────────────────────────────────────────────────
+async function findAAAffiliate(teamId) {
   try {
-    const url = `${API}/people/${batterId}/stats?stats=vsPlayer&opposingPlayerId=${pitcherId}&group=hitting&gameType=R&sportIds=${SPORT_IDS}`;
-    const data = await fetchJSON(url);
-    const split = data.stats?.[0]?.splits?.[0]?.stat;
-    if (!split || !split.plateAppearances || split.plateAppearances === 0) return null;
-    return split;
+    // Get parent org for this AAA team
+    const teamData = await fetchJSON(`${API}/teams/${teamId}?hydrate=parentOrg`);
+    const parentOrgId = teamData.teams[0]?.parentOrgId;
+    if (!parentOrgId) return null;
+
+    // Find all AA teams and match parent org
+    const aaTeams = await fetchJSON(`${API}/teams?sportId=12&season=2025`);
+    const affiliate = aaTeams.teams?.find(t => t.parentOrgId === parentOrgId);
+    return affiliate ? { id: affiliate.id, name: affiliate.name, parentOrgId } : null;
   } catch {
     return null;
   }
+}
+
+// ─── FIND GAMES BETWEEN TWO TEAMS ──────────────────────────────────────────
+async function findGamesBetween(teamA, teamB, sportId) {
+  const gamePks = [];
+  const fetches = SEASONS.map(async (season) => {
+    try {
+      const data = await fetchJSON(
+        `${API}/schedule?sportId=${sportId}&teamId=${teamA}&startDate=${season}-01-01&endDate=${season}-12-31&gameType=R`
+      );
+      for (const date of (data.dates || [])) {
+        for (const g of (date.games || [])) {
+          if (g.status?.detailedState !== 'Final') continue;
+          const away = g.teams?.away?.team?.id;
+          const home = g.teams?.home?.team?.id;
+          if ((away === teamB || home === teamB)) {
+            gamePks.push(g.gamePk);
+          }
+        }
+      }
+    } catch {}
+  });
+  await Promise.all(fetches);
+  return gamePks;
+}
+
+// ─── PARSE PLAY-BY-PLAY FOR ONE GAME ────────────────────────────────────────
+function parseGamePlays(liveData, rosterIds) {
+  // rosterIds = { slSet: Set of SL player IDs, oppSet: Set of opp player IDs }
+  const plays = liveData?.plays?.allPlays || [];
+  const atBats = [];
+
+  for (const play of plays) {
+    const eventType = play.result?.eventType;
+    if (!eventType || play.result?.type !== 'atBat') continue;
+
+    const batterId  = play.matchup?.batter?.id;
+    const pitcherId = play.matchup?.pitcher?.id;
+    if (!batterId || !pitcherId) continue;
+
+    // Only keep at-bats involving one SL player and one opp player
+    const batterIsSL  = rosterIds.slSet.has(batterId);
+    const batterIsOpp = rosterIds.oppSet.has(batterId);
+    const pitcherIsSL  = rosterIds.slSet.has(pitcherId);
+    const pitcherIsOpp = rosterIds.oppSet.has(pitcherId);
+
+    if (!((batterIsSL && pitcherIsOpp) || (batterIsOpp && pitcherIsSL))) continue;
+
+    // Compute stats from this plate appearance
+    const isPA = true; // every completed at-bat is a PA
+    const isAB = !NOT_AB.has(eventType);
+    const isK  = K_EVENTS.has(eventType);
+    const isBB = WALK_EVENTS.has(eventType);
+    const isHit = HIT_EVENTS.has(eventType);
+    const tb   = TB_MAP[eventType] || 0;
+
+    atBats.push({
+      batterId,
+      pitcherId,
+      pa: 1,
+      ab: isAB ? 1 : 0,
+      k: isK ? 1 : 0,
+      bb: isBB ? 1 : 0,
+      h: isHit ? 1 : 0,
+      tb: tb
+    });
+  }
+  return atBats;
+}
+
+// ─── AGGREGATE AT-BATS INTO MATCHUP STATS ───────────────────────────────────
+function aggregateMatchups(allAtBats, slRoster, oppRoster) {
+  // Key: "batterId-pitcherId"
+  const map = {};
+  for (const ab of allAtBats) {
+    const key = `${ab.batterId}-${ab.pitcherId}`;
+    if (!map[key]) {
+      map[key] = { batterId: ab.batterId, pitcherId: ab.pitcherId, pa: 0, ab: 0, k: 0, bb: 0, h: 0, tb: 0 };
+    }
+    const m = map[key];
+    m.pa += ab.pa;
+    m.ab += ab.ab;
+    m.k  += ab.k;
+    m.bb += ab.bb;
+    m.h  += ab.h;
+    m.tb += ab.tb;
+  }
+
+  // Build lookup maps
+  const slMap = {};
+  slRoster.forEach(p => { slMap[p.id] = p; });
+  const oppMap = {};
+  oppRoster.forEach(p => { oppMap[p.id] = p; });
+
+  // Classify into hitters/pitchers sections
+  const hitters = [];  // SL hitters vs opp pitchers
+  const pitchers = []; // opp hitters vs SL pitchers (SL pitcher perspective)
+
+  for (const m of Object.values(map)) {
+    if (m.pa === 0) continue;
+    const slg = m.ab > 0 ? m.tb / m.ab : 0;
+    const stat = {
+      plateAppearances: m.pa,
+      atBats: m.ab,
+      strikeOuts: m.k,
+      baseOnBalls: m.bb,
+      hits: m.h,
+      totalBases: m.tb,
+      slg: slg
+    };
+
+    const batterSL  = slMap[m.batterId];
+    const pitcherOpp = oppMap[m.pitcherId];
+    const batterOpp  = oppMap[m.batterId];
+    const pitcherSL  = slMap[m.pitcherId];
+
+    if (batterSL && pitcherOpp) {
+      hitters.push({ batter: batterSL, pitcher: pitcherOpp, stat });
+    }
+    if (batterOpp && pitcherSL) {
+      // For pitchers tab: batter is opp hitter, pitcher is SL pitcher
+      pitchers.push({ batter: batterOpp, pitcher: pitcherSL, stat });
+    }
+  }
+
+  return { hitters, pitchers };
 }
 
 // ─── MAIN LOAD ───────────────────────────────────────────────────────────────
@@ -545,51 +693,69 @@ async function loadMatchups() {
   if (!oppId) return;
 
   const oppName = AAA_TEAMS.find(t => t.id === oppId)?.name || 'Opponent';
-  setProgress(true, `Loading rosters…`, 0);
+  setProgress(true, 'Loading rosters and finding games...', 0);
   document.getElementById('error-wrap').style.display = 'none';
   document.getElementById('load-btn').disabled = true;
 
   try {
     // Step 1: Fetch both rosters
+    setProgress(true, 'Fetching active rosters...', 5);
     const [slRoster, oppRoster] = await Promise.all([getRoster(SL_TEAM_ID), getRoster(oppId)]);
-    const slHitters  = slRoster.filter(p => !p.isPitcher);
-    const slPitchers = slRoster.filter(p =>  p.isPitcher);
-    const oppHitters  = oppRoster.filter(p => !p.isPitcher);
-    const oppPitchers = oppRoster.filter(p =>  p.isPitcher);
 
-    // Step 2: Build all matchup pairs
-    const hitterPairs  = slHitters.flatMap(h  => oppPitchers.map(p => ({ batter: h,  pitcher: p })));
-    const pitcherPairs = slPitchers.flatMap(p => oppHitters.map(h  => ({ batter: h,  pitcher: p })));
+    if (slRoster.length === 0) throw new Error('Could not load Sugar Land roster');
+    if (oppRoster.length === 0) throw new Error('Could not load opponent roster');
 
-    const total = hitterPairs.length + pitcherPairs.length;
-    let fetched = 0;
+    const slSet  = new Set(slRoster.map(p => p.id));
+    const oppSet = new Set(oppRoster.map(p => p.id));
+    const rosterIds = { slSet, oppSet };
 
-    const progress = (done, t) => {
-      fetched++;
-      const pct = Math.round((fetched / total) * 100);
-      setProgress(true, `Fetching matchup data…`, pct, `${fetched} / ${total} matchups checked`);
-    };
-
-    // Step 3: Fetch all matchup data concurrently
-    setProgress(true, `Fetching ${total} matchup combinations…`, 0);
-
-    const [hitterResults, pitcherResults] = await Promise.all([
-      batchedMap(hitterPairs, async (pair, i) => {
-        const stat = await getMatchup(pair.batter.id, pair.pitcher.id);
-        fetched++;
-        setProgress(true, `Fetching matchup data…`, Math.round((fetched/total)*100), `${fetched} / ${total} pairs checked`);
-        return stat ? { batter: pair.batter, pitcher: pair.pitcher, stat } : null;
-      }, 8),
-      batchedMap(pitcherPairs, async (pair, i) => {
-        const stat = await getMatchup(pair.batter.id, pair.pitcher.id);
-        fetched++;
-        setProgress(true, `Fetching matchup data…`, Math.round((fetched/total)*100), `${fetched} / ${total} pairs checked`);
-        return stat ? { batter: pair.batter, pitcher: pair.pitcher, stat } : null;
-      }, 8)
+    // Step 2: Find AA affiliates
+    setProgress(true, 'Finding AA affiliates...', 10);
+    const [slAA, oppAA] = await Promise.all([
+      findAAAffiliate(SL_TEAM_ID),
+      findAAAffiliate(oppId)
     ]);
 
-    currentData.hitters  = hitterResults.filter(Boolean);
-    currentData.pitchers = pitcherResults.filter(Boolean);
+    // Step 3: Find all games between teams at AAA and AA levels
+    setProgress(true, 'Searching game schedules (AAA + AA, 2024-2026)...', 15);
+    const gameSearches = [findGamesBetween(SL_TEAM_ID, oppId, 11)]; // AAA games
+    if (slAA && oppAA) {
+      gameSearches.push(findGamesBetween(slAA.id, oppAA.id, 12)); // AA games
+    }
+    const gameResults = await Promise.all(gameSearches);
+    const allGamePks = [...new Set(gameResults.flat())]; // deduplicate
+
+    if (allGamePks.length === 0) {
+      // No direct team-vs-team games found, show message
+      currentData = { hitters: [], pitchers: [] };
+      setProgress(false);
+      document.getElementById('load-btn').disabled = false;
+      rerender(oppName);
+      return;
+    }
+
+    setProgress(true, `Found ${allGamePks.length} games. Fetching play-by-play...`, 20,
+      `${gameResults[0]?.length || 0} AAA games, ${gameResults[1]?.length || 0} AA games`);
+
+    // Step 4: Fetch play-by-play for each game and parse
+    const allAtBats = [];
+    let gamesProcessed = 0;
+    await batchedMap(allGamePks, async (gamePk) => {
+      try {
+        const data = await fetchJSON(`https://statsapi.mlb.com/api/v1.1/game/${gamePk}/feed/live`);
+        const atBats = parseGamePlays(data.liveData ? data : { plays: { allPlays: [] } }, rosterIds);
+        allAtBats.push(...atBats);
+      } catch {}
+      gamesProcessed++;
+      const pct = 20 + Math.round((gamesProcessed / allGamePks.length) * 70);
+      setProgress(true, `Processing game play-by-play...`, pct,
+        `${gamesProcessed} / ${allGamePks.length} games parsed (${allAtBats.length} at-bats found)`);
+    }, 6);
+
+    // Step 5: Aggregate into matchup stats
+    setProgress(true, 'Aggregating matchup statistics...', 95);
+    const result = aggregateMatchups(allAtBats, slRoster, oppRoster);
+    currentData = result;
 
     setProgress(false);
     document.getElementById('load-btn').disabled = false;
@@ -623,13 +789,12 @@ function renderSection(type, rows, oppName) {
     section.innerHTML = `
       <div class="placeholder">
         <div class="ph-icon">${currentData[type].length === 0 ? '🔍' : '🔎'}</div>
-        <div class="ph-title">${currentData[type].length === 0 ? 'No matchup data loaded yet' : 'No matchups meet the minimum PA filter'}</div>
-        <div class="ph-sub">${currentData[type].length > 0 ? `Try lowering the minimum PA threshold — ${currentData[type].length} raw matchups were found.` : 'These players may not have faced each other in any tracked games.'}</div>
+        <div class="ph-title">${currentData[type].length === 0 ? 'No matchup data found' : 'No matchups meet the minimum PA filter'}</div>
+        <div class="ph-sub">${currentData[type].length > 0 ? `Try lowering the minimum PA threshold — ${currentData[type].length} raw matchups were found.` : 'These teams may not have played each other recently (2024-2026 AAA/AA).'}</div>
       </div>`;
     return;
   }
 
-  // Sort
   const { col, dir } = sortState[type];
   const sorted = [...rows].sort((a, b) => {
     let va, vb;
@@ -640,22 +805,19 @@ function renderSection(type, rows, oppName) {
       case 'ab':       va = a.stat.atBats || 0; vb = b.stat.atBats || 0; break;
       case 'k':        va = kPct(a.stat); vb = kPct(b.stat); break;
       case 'bb':       va = bbPct(a.stat); vb = bbPct(b.stat); break;
-      case 'slg':      va = parseFloat(a.stat.slg) || 0; vb = parseFloat(b.stat.slg) || 0; break;
+      case 'slg':      va = a.stat.slg || 0; vb = b.stat.slg || 0; break;
       default:         va = a.batter.name;  vb = b.batter.name;
     }
     if (typeof va === 'string') return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
     return dir === 'asc' ? va - vb : vb - va;
   });
 
-  const batterLabel  = isHitters ? 'SL Hitter'        : 'SL Pitcher';
-  const pitcherLabel = isHitters ? `Opp Pitcher (${oppName})` : `Opp Hitter (${oppName})`;
+  const batterLabel  = isHitters ? 'SL Hitter' : 'Opp Hitter (' + oppName + ')';
+  const pitcherLabel = isHitters ? 'Opp Pitcher (' + oppName + ')' : 'SL Pitcher';
 
   const legendNote = isHitters
     ? '<span class="legend-label">For hitter:</span>'
     : '<span class="legend-label">For SL pitcher:</span>';
-
-  const kNote  = isHitters ? 'K% low' : 'K% high';
-  const bbNote = isHitters ? 'BB% high' : 'BB% low';
 
   section.innerHTML = `
     <div class="section-header">
@@ -688,7 +850,6 @@ function renderSection(type, rows, oppName) {
       </table>
     </div>`;
 
-  // Attach sort listeners
   section.querySelectorAll('th[data-col]').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
@@ -708,10 +869,8 @@ function rowHTML(r, isHitters) {
   const pa  = r.stat.plateAppearances || 0;
   const kp  = kPct(r.stat);
   const bbp = bbPct(r.stat);
-  const slg = parseFloat(r.stat.slg) || 0;
+  const slg = r.stat.slg || 0;
 
-  // For hitters: low K% = good, high BB% = good, high SLG = good
-  // For pitchers section: high K% = good (for pitcher), low BB% = good, low SLG = good
   const kClass   = isHitters ? colorClass(kp,  [0.15, 0.22], true)  : colorClass(kp,  [0.15, 0.22], false);
   const bbClass  = isHitters ? colorClass(bbp, [0.07, 0.11], false) : colorClass(bbp, [0.07, 0.11], true);
   const slgClass = isHitters ? colorClass(slg, [0.350, 0.450], false): colorClass(slg, [0.350, 0.450], true);
@@ -744,7 +903,6 @@ function bbPct(s) {
 function fmtPct(v) { return (v * 100).toFixed(1) + '%'; }
 function fmtSlg(v) { return v.toFixed(3).replace(/^0/, ''); }
 
-// colorClass: if lowerIsBetter=true, low = good, high = bad
 function colorClass(val, [lo, hi], lowerIsBetter) {
   if (val < lo) return lowerIsBetter ? 'stat-good' : 'stat-bad';
   if (val > hi) return lowerIsBetter ? 'stat-bad' : 'stat-good';
@@ -764,7 +922,7 @@ function setProgress(visible, title = '', pct = 0, sub = '') {
   wrap.style.display = visible ? 'block' : 'none';
   if (visible) {
     document.getElementById('progress-title').textContent = title;
-    document.getElementById('progress-sub').textContent = sub || 'Fetching roster and at-bat data from MLB Stats API…';
+    document.getElementById('progress-sub').textContent = sub || 'Fetching roster and game data from MLB Stats API...';
     document.getElementById('progress-bar').style.width = pct + '%';
     document.getElementById('progress-text').textContent = pct + '% complete';
   }
