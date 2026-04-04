@@ -35,7 +35,7 @@ body {
   font-size: 14px;
 }
 
-/* âââ HEADER âââ */
+/* ─── HEADER ─── */
 header {
   background: var(--navy);
   color: white;
@@ -60,7 +60,7 @@ header {
   text-transform: uppercase;
 }
 
-/* âââ CONTROLS âââ */
+/* ─── CONTROLS ─── */
 .controls {
   background: var(--white);
   border-bottom: 1px solid var(--border);
@@ -122,10 +122,10 @@ select#min-pa { width: 75px; }
   border-radius: 4px;
 }
 
-/* âââ MAIN âââ */
+/* ─── MAIN ─── */
 main { padding: 22px 28px; max-width: 1500px; margin: 0 auto; }
 
-/* âââ PROGRESS âââ */
+/* ─── PROGRESS ─── */
 #progress-wrap {
   background: var(--white);
   border: 1px solid var(--border);
@@ -154,7 +154,7 @@ main { padding: 22px 28px; max-width: 1500px; margin: 0 auto; }
 }
 #progress-text { font-size: 12px; color: var(--text-muted); }
 
-/* âââ ERROR âââ */
+/* ─── ERROR ─── */
 #error-wrap {
   background: #fff3f3;
   border: 1px solid #ffcdd2;
@@ -166,7 +166,7 @@ main { padding: 22px 28px; max-width: 1500px; margin: 0 auto; }
   font-size: 13px;
 }
 
-/* âââ TABS âââ */
+/* ─── TABS ─── */
 .tabs {
   display: flex;
   gap: 4px;
@@ -192,7 +192,7 @@ main { padding: 22px 28px; max-width: 1500px; margin: 0 auto; }
 .tab.active { background: var(--navy); color: white; }
 .tab:not(.active):hover { background: var(--light); color: var(--navy); }
 
-/* âââ SECTION âââ */
+/* ─── SECTION ─── */
 .section { display: none; }
 .section.active { display: block; }
 
@@ -236,7 +236,7 @@ main { padding: 22px 28px; max-width: 1500px; margin: 0 auto; }
 .legend-dot.neutral { background: #ffc107; }
 .legend-dot.bad { background: #ef5350; }
 
-/* âââ TABLE âââ */
+/* ─── TABLE ─── */
 .table-wrap {
   background: var(--white);
   border: 1px solid var(--border);
@@ -271,8 +271,8 @@ th {
 }
 th:hover { background: var(--navy-hover); }
 th.center { text-align: center; }
-th.sorted-asc::after { content: ' â²'; font-size: 9px; opacity: 0.8; }
-th.sorted-desc::after { content: ' â¼'; font-size: 9px; opacity: 0.8; }
+th.sorted-asc::after { content: ' ▲'; font-size: 9px; opacity: 0.8; }
+th.sorted-desc::after { content: ' ▼'; font-size: 9px; opacity: 0.8; }
 
 tbody tr { border-bottom: 1px solid #f0f3f7; transition: background 0.1s; }
 tbody tr:hover { background: #eef3fa !important; }
@@ -328,7 +328,7 @@ td.center { text-align: center; }
 .placeholder .ph-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
 .placeholder .ph-sub { font-size: 13px; line-height: 1.6; }
 
-/* âââ EMPTY STATE âââ */
+/* ─── EMPTY STATE ─── */
 .no-data-row td {
   text-align: center;
   padding: 18px;
@@ -336,7 +336,7 @@ td.center { text-align: center; }
   font-style: italic;
 }
 
-/* âââ RESPONSIVE âââ */
+/* ─── RESPONSIVE ─── */
 @media (max-width: 700px) {
   header { padding: 12px 16px; }
   .controls { padding: 12px 16px; }
@@ -348,10 +348,10 @@ td.center { text-align: center; }
 <body>
 
 <header>
-  <div class="header-logo">ð</div>
+  <div class="header-logo">🚀</div>
   <div class="header-title">
     <h1>Space Cowboys Matchup Tracker</h1>
-    <p>Historical batterâpitcher data across all professional levels</p>
+    <p>Historical batter–pitcher data across all professional levels</p>
   </div>
   <div class="header-badge">MLB Stats API</div>
 </header>
@@ -360,7 +360,7 @@ td.center { text-align: center; }
   <div class="control-group">
     <label>Opponent</label>
     <select id="opponent-select" disabled>
-      <option value="">Loading teamsâ¦</option>
+      <option value="">Loading teams…</option>
     </select>
   </div>
   <div class="control-group">
@@ -375,33 +375,33 @@ td.center { text-align: center; }
   </div>
   <button class="btn btn-primary" id="load-btn" disabled>Load Matchups</button>
   <div class="controls-right">
-    <span class="sport-note">ð All professional levels (MLB + MiLB)</span>
+    <span class="sport-note">📊 All professional levels (MLB + MiLB)</span>
   </div>
 </div>
 
 <main>
 
   <div id="progress-wrap">
-    <div id="progress-title">Loading Matchup Dataâ¦</div>
+    <div id="progress-title">Loading Matchup Data…</div>
     <div id="progress-sub">Fetching rosters and historical at-bat data</div>
     <div class="progress-bar-outer">
       <div class="progress-bar-inner" id="progress-bar"></div>
     </div>
-    <div id="progress-text">Preparingâ¦</div>
+    <div id="progress-text">Preparing…</div>
   </div>
 
   <div id="error-wrap"></div>
 
   <div id="content">
     <div class="tabs">
-      <button class="tab active" data-tab="hitters">âï¸ SL Hitters vs Opp Pitchers</button>
-      <button class="tab" data-tab="pitchers">ð¡ï¸ SL Pitchers vs Opp Hitters</button>
+      <button class="tab active" data-tab="hitters">⚔️ SL Hitters vs Opp Pitchers</button>
+      <button class="tab" data-tab="pitchers">🛡️ SL Pitchers vs Opp Hitters</button>
     </div>
 
     <!-- Hitters Section -->
     <div class="section active" id="section-hitters">
       <div class="placeholder">
-        <div class="ph-icon">â¾</div>
+        <div class="ph-icon">⚾</div>
         <div class="ph-title">Select an opponent to load matchup data</div>
         <div class="ph-sub">Choose a team from the dropdown above and click <strong>Load Matchups</strong>.<br>Data covers all at-bats across every professional level in the MLB Stats system.</div>
       </div>
@@ -410,7 +410,7 @@ td.center { text-align: center; }
     <!-- Pitchers Section -->
     <div class="section" id="section-pitchers">
       <div class="placeholder">
-        <div class="ph-icon">â¾</div>
+        <div class="ph-icon">⚾</div>
         <div class="ph-title">Select an opponent to load matchup data</div>
         <div class="ph-sub">Choose a team from the dropdown above and click <strong>Load Matchups</strong>.</div>
       </div>
@@ -420,7 +420,7 @@ td.center { text-align: center; }
 </main>
 
 <script>
-// âââ CONSTANTS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── CONSTANTS ─────────────────────────────────────────────────────────────
 const API = 'https://statsapi.mlb.com/api/v1';
 const SL_TEAM_ID = 5434;
 const SPORT_IDS = '1,11,12,13,14,16'; // MLB + AAA + AA + High-A + A + Rookie
@@ -455,7 +455,14 @@ const AAA_TEAMS = [
   {id:553,  name:'Tacoma Rainiers',       abbr:'TAC'},
   {id:252,  name:'Toledo Mud Hens',       abbr:'TOL'},
   {id:463,  name:'Worcester Red Sox',     abbr:'WOR'},
-];âââââââââââââââââââââââââââââ
+];
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let sortState = { hitters: { col: null, dir: 'asc' }, pitchers: { col: null, dir: 'asc' } };
+let currentData = { hitters: [], pitchers: [] };
+let activeTab = 'hitters';
+
+// ─── INIT ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   populateOpponents();
   document.getElementById('load-btn').addEventListener('click', loadMatchups);
@@ -468,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function populateOpponents() {
   const sel = document.getElementById('opponent-select');
-  sel.innerHTML = '<option value="">â Select opponent â</option>';
+  sel.innerHTML = '<option value="">— Select opponent —</option>';
   AAA_TEAMS.filter(t => t.id !== SL_TEAM_ID).forEach(t => {
     const opt = document.createElement('option');
     opt.value = t.id;
@@ -485,7 +492,7 @@ function switchTab(e) {
   document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === `section-${tab}`));
 }
 
-// âââ ASYNC HELPERS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── ASYNC HELPERS ───────────────────────────────────────────────────────────
 async function fetchJSON(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
@@ -508,7 +515,7 @@ async function batchedMap(items, fn, concurrency = 8, onProgress) {
   return results;
 }
 
-// âââ ROSTER âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── ROSTER ─────────────────────────────────────────────────────────────────
 async function getRoster(teamId) {
   const data = await fetchJSON(`${API}/teams/${teamId}/roster/Active?season=2026`);
   return (data.roster || []).map(p => ({
@@ -519,7 +526,7 @@ async function getRoster(teamId) {
   }));
 }
 
-// âââ MATCHUP FETCH âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── MATCHUP FETCH ───────────────────────────────────────────────────────────
 async function getMatchup(batterId, pitcherId) {
   try {
     const url = `${API}/people/${batterId}/stats?stats=vsPlayer&opposingPlayerId=${pitcherId}&group=hitting&gameType=R&sportIds=${SPORT_IDS}`;
@@ -532,13 +539,13 @@ async function getMatchup(batterId, pitcherId) {
   }
 }
 
-// âââ MAIN LOAD âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── MAIN LOAD ───────────────────────────────────────────────────────────────
 async function loadMatchups() {
   const oppId = parseInt(document.getElementById('opponent-select').value);
   if (!oppId) return;
 
   const oppName = AAA_TEAMS.find(t => t.id === oppId)?.name || 'Opponent';
-  setProgress(true, `Loading rostersâ¦`, 0);
+  setProgress(true, `Loading rosters…`, 0);
   document.getElementById('error-wrap').style.display = 'none';
   document.getElementById('load-btn').disabled = true;
 
@@ -560,23 +567,23 @@ async function loadMatchups() {
     const progress = (done, t) => {
       fetched++;
       const pct = Math.round((fetched / total) * 100);
-      setProgress(true, `Fetching matchup dataâ¦`, pct, `${fetched} / ${total} matchups checked`);
+      setProgress(true, `Fetching matchup data…`, pct, `${fetched} / ${total} matchups checked`);
     };
 
     // Step 3: Fetch all matchup data concurrently
-    setProgress(true, `Fetching ${total} matchup combinationsâ¦`, 0);
+    setProgress(true, `Fetching ${total} matchup combinations…`, 0);
 
     const [hitterResults, pitcherResults] = await Promise.all([
       batchedMap(hitterPairs, async (pair, i) => {
         const stat = await getMatchup(pair.batter.id, pair.pitcher.id);
         fetched++;
-        setProgress(true, `Fetching matchup dataâ¦`, Math.round((fetched/total)*100), `${fetched} / ${total} pairs checked`);
+        setProgress(true, `Fetching matchup data…`, Math.round((fetched/total)*100), `${fetched} / ${total} pairs checked`);
         return stat ? { batter: pair.batter, pitcher: pair.pitcher, stat } : null;
       }, 8),
       batchedMap(pitcherPairs, async (pair, i) => {
         const stat = await getMatchup(pair.batter.id, pair.pitcher.id);
         fetched++;
-        setProgress(true, `Fetching matchup dataâ¦`, Math.round((fetched/total)*100), `${fetched} / ${total} pairs checked`);
+        setProgress(true, `Fetching matchup data…`, Math.round((fetched/total)*100), `${fetched} / ${total} pairs checked`);
         return stat ? { batter: pair.batter, pitcher: pair.pitcher, stat } : null;
       }, 8)
     ]);
@@ -595,7 +602,7 @@ async function loadMatchups() {
   }
 }
 
-// âââ RENDER ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── RENDER ──────────────────────────────────────────────────────────────────
 function rerender(oppNameOrEvent) {
   const oppName = typeof oppNameOrEvent === 'string' ? oppNameOrEvent :
     AAA_TEAMS.find(t => t.id === parseInt(document.getElementById('opponent-select').value))?.name || 'Opponent';
@@ -615,9 +622,9 @@ function renderSection(type, rows, oppName) {
   if (rows.length === 0) {
     section.innerHTML = `
       <div class="placeholder">
-        <div class="ph-icon">${currentData[type].length === 0 ? 'ð' : 'ð'}</div>
+        <div class="ph-icon">${currentData[type].length === 0 ? '🔍' : '🔎'}</div>
         <div class="ph-title">${currentData[type].length === 0 ? 'No matchup data loaded yet' : 'No matchups meet the minimum PA filter'}</div>
-        <div class="ph-sub">${currentData[type].length > 0 ? `Try lowering the minimum PA threshold â ${currentData[type].length} raw matchups were found.` : 'These players may not have faced each other in any tracked games.'}</div>
+        <div class="ph-sub">${currentData[type].length > 0 ? `Try lowering the minimum PA threshold — ${currentData[type].length} raw matchups were found.` : 'These players may not have faced each other in any tracked games.'}</div>
       </div>`;
     return;
   }
@@ -644,7 +651,7 @@ function renderSection(type, rows, oppName) {
   const pitcherLabel = isHitters ? `Opp Pitcher (${oppName})` : `Opp Hitter (${oppName})`;
 
   const legendNote = isHitters
-    ? '<span class="legend-label">For Hitter:</span>'
+    ? '<span class="legend-label">For hitter:</span>'
     : '<span class="legend-label">For SL pitcher:</span>';
 
   const kNote  = isHitters ? 'K% low' : 'K% high';
@@ -652,8 +659,8 @@ function renderSection(type, rows, oppName) {
 
   section.innerHTML = `
     <div class="section-header">
-      <h2>${isHitters ? 'âï¸ Space Cowboys Hitters vs ' + oppName + ' Pitchers'
-                       : 'ð¡ï¸ Space Cowboys Pitchers vs ' + oppName + ' Hitters'}</h2>
+      <h2>${isHitters ? '⚔️ Space Cowboys Hitters vs ' + oppName + ' Pitchers'
+                       : '🛡️ Space Cowboys Pitchers vs ' + oppName + ' Hitters'}</h2>
       <span class="count">${rows.length} matchup${rows.length !== 1 ? 's' : ''}</span>
     </div>
     <div class="legend">
@@ -703,6 +710,8 @@ function rowHTML(r, isHitters) {
   const bbp = bbPct(r.stat);
   const slg = parseFloat(r.stat.slg) || 0;
 
+  // For hitters: low K% = good, high BB% = good, high SLG = good
+  // For pitchers section: high K% = good (for pitcher), low BB% = good, low SLG = good
   const kClass   = isHitters ? colorClass(kp,  [0.15, 0.22], true)  : colorClass(kp,  [0.15, 0.22], false);
   const bbClass  = isHitters ? colorClass(bbp, [0.07, 0.11], false) : colorClass(bbp, [0.07, 0.11], true);
   const slgClass = isHitters ? colorClass(slg, [0.350, 0.450], false): colorClass(slg, [0.350, 0.450], true);
@@ -725,6 +734,7 @@ function rowHTML(r, isHitters) {
     </tr>`;
 }
 
+// ─── STAT HELPERS ────────────────────────────────────────────────────────────
 function kPct(s) {
   return s.plateAppearances > 0 ? (s.strikeOuts / s.plateAppearances) : 0;
 }
@@ -734,6 +744,7 @@ function bbPct(s) {
 function fmtPct(v) { return (v * 100).toFixed(1) + '%'; }
 function fmtSlg(v) { return v.toFixed(3).replace(/^0/, ''); }
 
+// colorClass: if lowerIsBetter=true, low = good, high = bad
 function colorClass(val, [lo, hi], lowerIsBetter) {
   if (val < lo) return lowerIsBetter ? 'stat-good' : 'stat-bad';
   if (val > hi) return lowerIsBetter ? 'stat-bad' : 'stat-good';
@@ -747,12 +758,13 @@ function colClass(col, type) {
   return '';
 }
 
+// ─── UI HELPERS ──────────────────────────────────────────────────────────────
 function setProgress(visible, title = '', pct = 0, sub = '') {
   const wrap = document.getElementById('progress-wrap');
   wrap.style.display = visible ? 'block' : 'none';
   if (visible) {
     document.getElementById('progress-title').textContent = title;
-    document.getElementById('progress-sub').textContent = sub || 'Fetching roster and at-bat data from MLB Stats APIâ¦';
+    document.getElementById('progress-sub').textContent = sub || 'Fetching roster and at-bat data from MLB Stats API…';
     document.getElementById('progress-bar').style.width = pct + '%';
     document.getElementById('progress-text').textContent = pct + '% complete';
   }
@@ -761,26 +773,7 @@ function setProgress(visible, title = '', pct = 0, sub = '') {
 function showError(msg) {
   const el = document.getElementById('error-wrap');
   el.style.display = 'block';
-  el.textContent = 'â¦ ' + msg;
-}
-</script>
-</body>
-</html>âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-function setProgress(visible, title = '', pct = 0, sub = '') {
-  const wrap = document.getElementById('progress-wrap');
-  wrap.style.display = visible ? 'block' : 'none';
-  if (visible) {
-    document.getElementById('progress-title').textContent = title;
-    document.getElementById('progress-sub').textContent = sub || 'Fetching roster and at-bat data from MLB Stats APIâ¦';
-    document.getElementById('progress-bar').style.width = pct + '%';
-    document.getElementById('progress-text').textContent = pct + '% complete';
-  }
-}
-
-function showError(msg) {
-  const el = document.getElementById('error-wrap');
-  el.style.display = 'block';
-  el.textContent = 'â ï¸ ' + msg;
+  el.textContent = '⚠️ ' + msg;
 }
 </script>
 </body>
