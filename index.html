@@ -288,7 +288,20 @@ td.center { text-align: center; }
 
 .player-cell { display: flex; align-items: center; gap: 7px; }
 .player-name { font-weight: 600; color: var(--text); }
-
+.hand-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  color: white;
+  white-space: nowrap;
+}
+.hand-RHH { background: #1a5276; }
+.hand-LHH { background: #1e5631; }
+.hand-SWH { background: #4a235a; }
+.hand-RHP { background: #1a5276; }
+.hand-LHP { background: #1e5631; }
 
 .pa-cell { text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600; }
 
@@ -493,15 +506,18 @@ async function batchedMap(items, fn, concurrency = 6) {
 }
 
 // ─── FETCH CURRENT ROSTER ───────────────────────────────────────────────────
-// Returns an array of { id, name, pos, isPitcher } for a team's active roster.
+// Returns an array of { id, name, pos, isPitcher, batSide, pitchHand } for a team's active roster.
+// Uses hydrate=person to get handedness data (batSide, pitchHand).
 async function fetchCurrentRoster(teamId) {
   try {
-    const data = await fetchJSON(`${API}/teams/${teamId}/roster?rosterType=active`);
+    const data = await fetchJSON(`${API}/teams/${teamId}/roster?rosterType=active&hydrate=person`);
     return (data.roster || []).map(p => ({
       id: p.person?.id,
       name: p.person?.fullName || `Player ${p.person?.id}`,
       pos: p.position?.abbreviation || 'UT',
-      isPitcher: ['P', 'SP', 'RP'].includes(p.position?.abbreviation || '')
+      isPitcher: ['P', 'SP', 'RP'].includes(p.position?.abbreviation || ''),
+      batSide: p.person?.batSide?.code || '?',    // R, L, or S (switch)
+      pitchHand: p.person?.pitchHand?.code || '?'  // R or L
     })).filter(p => p.id);
   } catch { return []; }
 }
@@ -729,8 +745,10 @@ async function loadMatchups() {
         const data = await fetchJSON(`https://statsapi.mlb.com/api/v1.1/game/${gamePk}/feed/live`);
         const { atBats, playerInfo } = parseGameData(data, slPlayerIds, oppPlayerIds);
         allAtBats.push(...atBats);
-        // Enrich player info with boxscore data (better position info from game context)
-        Object.assign(playerInfoMap, playerInfo);
+        // Add any players not already in the map (roster data has handedness, don't overwrite)
+        for (const [id, info] of Object.entries(playerInfo)) {
+          if (!playerInfoMap[id]) playerInfoMap[id] = info;
+        }
       } catch {}
       gamesProcessed++;
       const pct = 38 + Math.round((gamesProcessed / sharedGamePks.length) * 55);
@@ -860,15 +878,20 @@ function rowHTML(r, isHitters) {
   const bbClass  = isHitters ? colorClass(bbp, [0.07, 0.11], false) : colorClass(bbp, [0.07, 0.11], true);
   const slgClass = isHitters ? colorClass(slg, [0.350, 0.450], false): colorClass(slg, [0.350, 0.450], true);
 
+  // Batter handedness badge
+  const batCode = r.batter.batSide === 'S' ? 'SWH' : r.batter.batSide === 'L' ? 'LHH' : 'RHH';
+  // Pitcher handedness badge
+  const pitCode = r.pitcher.pitchHand === 'L' ? 'LHP' : 'RHP';
+
   return `
     <tr>
       <td><div class="player-cell">
         <span class="player-name">${r.batter.name}</span>
-        <span class="pos-badge pos-${r.batter.pos.replace(/[^A-Z]/g,'')}">${r.batter.pos}</span>
+        <span class="hand-badge hand-${batCode}">${batCode}</span>
       </div></td>
       <td><div class="player-cell">
         <span class="player-name">${r.pitcher.name}</span>
-        <span class="pos-badge pos-${r.pitcher.pos.replace(/[^A-Z]/g,'')}">${r.pitcher.pos}</span>
+        <span class="hand-badge hand-${pitCode}">${pitCode}</span>
       </div></td>
       <td class="pa-cell">${pa}</td>
       <td class="pa-cell">${r.stat.atBats || 0}</td>
