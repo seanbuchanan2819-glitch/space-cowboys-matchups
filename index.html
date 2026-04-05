@@ -394,8 +394,8 @@ td.center { text-align: center; }
 
   <div id="content">
     <div class="tabs">
-      <button class="tab active" data-tab="hitters">⚔️ SL Hitters vs Opp Pitchers</button>
-      <button class="tab" data-tab="pitchers">🛡️ SL Pitchers vs Opp Hitters</button>
+      <button class="tab active" data-tab="hitters">🏏 SL Hitters vs Opp Pitchers</button>
+      <button class="tab" data-tab="pitchers">⚾ SL Pitchers vs Opp Hitters</button>
     </div>
 
     <!-- Hitters Section -->
@@ -524,6 +524,19 @@ function extractPlayersFromBoxscore(boxscoreTeam) {
     };
   }
   return players;
+}
+
+// ─── FETCH CURRENT SL ROSTER ────────────────────────────────────────────────
+// Returns a Set of player IDs currently on the Space Cowboys active roster.
+async function fetchCurrentSLRoster() {
+  try {
+    const data = await fetchJSON(`${API}/teams/${SL_TEAM_ID}/roster?rosterType=active`);
+    const ids = new Set();
+    for (const p of (data.roster || [])) {
+      if (p.person?.id) ids.add(p.person.id);
+    }
+    return ids;
+  } catch { return null; }
 }
 
 // ─── FIND AA AFFILIATES ─────────────────────────────────────────────────────
@@ -699,11 +712,12 @@ async function loadMatchups() {
   document.getElementById('load-btn').disabled = true;
 
   try {
-    // Step 1: Find AA affiliates
-    setProgress(true, 'Finding AA affiliates...', 5);
-    const [slAA, oppAA] = await Promise.all([
+    // Step 1: Find AA affiliates + fetch current SL roster
+    setProgress(true, 'Finding AA affiliates & current roster...', 5);
+    const [slAA, oppAA, currentRosterIds] = await Promise.all([
       findAAAffiliate(SL_TEAM_ID),
-      findAAAffiliate(oppId)
+      findAAAffiliate(oppId),
+      fetchCurrentSLRoster()
     ]);
 
     // Step 2: Find all games between teams at AAA and AA levels
@@ -756,6 +770,12 @@ async function loadMatchups() {
     // Step 4: Aggregate into matchup stats using cumulative player maps
     setProgress(true, 'Aggregating matchup statistics...', 95);
     const result = aggregateMatchups(allAtBats, cumulativeSLPlayers, cumulativeOppPlayers);
+
+    // Step 5: Filter to only SL players on current active roster
+    if (currentRosterIds && currentRosterIds.size > 0) {
+      result.hitters  = result.hitters.filter(r  => currentRosterIds.has(r.batter.id));
+      result.pitchers = result.pitchers.filter(r => currentRosterIds.has(r.pitcher.id));
+    }
     currentData = result;
 
     setProgress(false);
@@ -822,8 +842,8 @@ function renderSection(type, rows, oppName) {
 
   section.innerHTML = `
     <div class="section-header">
-      <h2>${isHitters ? '⚔️ Space Cowboys Hitters vs ' + oppName + ' Pitchers'
-                       : '🛡️ Space Cowboys Pitchers vs ' + oppName + ' Hitters'}</h2>
+      <h2>${isHitters ? '🏏 Space Cowboys Hitters vs ' + oppName + ' Pitchers'
+                       : '⚾ Space Cowboys Pitchers vs ' + oppName + ' Hitters'}</h2>
       <span class="count">${rows.length} matchup${rows.length !== 1 ? 's' : ''}</span>
     </div>
     <div class="legend">
