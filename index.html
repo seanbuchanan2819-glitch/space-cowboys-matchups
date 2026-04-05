@@ -394,8 +394,8 @@ td.center { text-align: center; }
 
   <div id="content">
     <div class="tabs">
-      <button class="tab active" data-tab="hitters">🪖 SL Hitters vs Opp Pitchers</button>
-      <button class="tab" data-tab="pitchers">⚾ SL Pitchers vs Opp Hitters</button>
+      <button class="tab active" data-tab="hitters">SL Hitters vs Opp Pitchers</button>
+      <button class="tab" data-tab="pitchers">SL Pitchers vs Opp Hitters</button>
     </div>
 
     <!-- Hitters Section -->
@@ -821,8 +821,8 @@ function renderSection(type, rows, oppName) {
 
   section.innerHTML = `
     <div class="section-header">
-      <h2>${isHitters ? '🪖 Space Cowboys Hitters vs ' + oppName + ' Pitchers'
-                       : '⚾ Space Cowboys Pitchers vs ' + oppName + ' Hitters'}</h2>
+      <h2>${isHitters ? 'Space Cowboys Hitters vs ' + oppName + ' Pitchers'
+                       : 'Space Cowboys Pitchers vs ' + oppName + ' Hitters'}</h2>
       <span class="count">${rows.length} matchup${rows.length !== 1 ? 's' : ''}</span>
     </div>
     <div class="legend">
