@@ -522,21 +522,29 @@ async function fetchCurrentRoster(teamId) {
 }
 
 // ─── FETCH GAME LOGS FOR A PLAYER ──────────────────────────────────────────
-// Returns an array of gamePks the player appeared in across all SEASONS.
-// Uses hitting game log for position players, pitching for pitchers.
+// Returns a Set of gamePks the player appeared in across all SEASONS and levels.
+// Queries MLB (1), AAA (11), and AA (12) because players move between levels
+// and the API defaults to MLB only if sportId is omitted.
+const SPORT_IDS = [1, 11, 12]; // MLB, AAA, AA
+
 async function fetchPlayerGamePks(playerId, isPitcher) {
   const group = isPitcher ? 'pitching' : 'hitting';
   const gamePks = new Set();
-  await Promise.all(SEASONS.map(async (season) => {
-    try {
-      const data = await fetchJSON(
-        `${API}/people/${playerId}/stats?stats=gameLog&group=${group}&season=${season}&gameType=R`
+  const fetches = [];
+  for (const season of SEASONS) {
+    for (const sportId of SPORT_IDS) {
+      fetches.push(
+        fetchJSON(`${API}/people/${playerId}/stats?stats=gameLog&group=${group}&season=${season}&gameType=R&sportId=${sportId}`)
+          .then(data => {
+            for (const split of (data.stats?.[0]?.splits || [])) {
+              if (split.game?.gamePk) gamePks.add(split.game.gamePk);
+            }
+          })
+          .catch(() => {})
       );
-      for (const split of (data.stats?.[0]?.splits || [])) {
-        if (split.game?.gamePk) gamePks.add(split.game.gamePk);
-      }
-    } catch {}
-  }));
+    }
+  }
+  await Promise.all(fetches);
   return gamePks;
 }
 
